@@ -1,32 +1,50 @@
-let formData = {
-  email: '',
-  message: '',
-};
-
+let formData = { email: '', message: '' };
 const form = document.querySelector('.feedback-form');
-
-const fellFormFields = () => {
+const saveToLocalStorage = () => {
   try {
-    if (localStorage.length === 0) {
-      return;
-    }
-    const formDataLS = JSON.parse(localStorage.getItem('feedback-form-state'));
-    formData = formDataLS;
-    for (const key in formDataLS) {
-      form.elements[key].value = formDataLS[key];
-    }
+    localStorage.setItem('feedback-form-state', JSON.stringify(formData));
   } catch (error) {
-    console.log('error', error);
+    console.error('Error saving to local storage:', error);
   }
 };
-fellFormFields();
 
-const inputOnFormField = event => {
-  const { target: fieldForm } = event;
-  const { value: fieldInputData } = fieldForm;
-  const { name: fieldInputName } = fieldForm;
-  formData[fieldInputName] = fieldInputData;
-  localStorage.setItem('feedback-form-state', JSON.stringify(formData));
+const populateForm = () => {
+  try {
+    const savedData = localStorage.getItem('feedback-form-state');
+    if (savedData) {
+      const { email, message } = JSON.parse(savedData);
+      formData.email = email;
+      formData.message = message;
+      form.email.value = email || '';
+      form.message.value = message || '';
+    }
+  } catch (error) {
+    console.error('Error populating form:', error);
+  }
+};
+const handleInputChange = event => {
+  const { name, value } = event.target;
+  formData[name] = value.trim();
+  saveToLocalStorage();
 };
 
-form.addEventListener('input', inputOnFormField);
+const handleSubmit = event => {
+  event.preventDefault();
+  try {
+    if (formData.email === '' || formData.message === '') {
+      alert('Fill please all fields');
+      return;
+    }
+    console.log(formData);
+    localStorage.removeItem('feedback-form-state');
+    formData.email = '';
+    formData.message = '';
+    form.reset();
+  } catch (error) {
+    console.error('Error during form submission:', error);
+  }
+};
+
+form.addEventListener('input', handleInputChange);
+form.addEventListener('submit', handleSubmit);
+document.addEventListener('DOMContentLoaded', populateForm);
